@@ -11,7 +11,9 @@ def read_dataset(filename):
     dataset = []
     with open(filename) as f:
         for line in f:
-            dataset.append(line.decode('utf-8').encode('ascii','ignore'))
+            line = line.decode('utf-8').encode('ascii','ignore')
+            nodigit = ''.join([i for i in line if not i.isdigit()])
+            dataset.append(nodigit)
     return dataset
 
 def split_data(abstracts, titles):
