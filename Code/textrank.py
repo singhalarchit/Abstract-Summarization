@@ -6,12 +6,12 @@ Created on Sun Nov 19 17:36:13 2017
 """
 
 import itertools
-import load_data as data
 import networkx as nx
 import nltk
 import numpy as np
-import rougescore as rouge
 import warnings
+from load_data import get_splitted_data
+from rougescore import _ngram_counts, _counter_overlap, lcs, eval_rouge
 from math import log10 as log
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -44,17 +44,17 @@ def similarity_matrix(sentences):
     return similarity
 
 def overlap(first, second):
-    first = rouge.tokenize(first)
-    second = rouge.tokenize(second)
-    first_counter = rouge._ngram_counts(first, 1)
-    second_counter = rouge._ngram_counts(second, 1)
-    matches = rouge._counter_overlap(first_counter, second_counter)
+    first = first.split()
+    second = second.split()
+    first_counter = _ngram_counts(first, 1)
+    second_counter = _ngram_counts(second, 1)
+    matches = _counter_overlap(first_counter, second_counter)
     return matches/(log(len(first)) + log(len(second)))
 
-def lcs(first, second):
-    first = rouge.tokenize(first)
-    second = rouge.tokenize(second)
-    matches = rouge.lcs(first, second)
+def lcss(first, second):
+    first = first.split()
+    second = second.split()
+    matches = lcs(first, second)
     return matches/(log(len(first)) + log(len(second)))
 
 def build_graph(sentences):
@@ -95,15 +95,15 @@ def textrank(abstracts):
         k += 1
     return np.asarray(predictions), failed
 
-SET = 2
+SET = 1
 MODEL = 3
 
-metrics = ['cosine', levenshtein_distance, overlap, lcs]
+metrics = ['cosine', levenshtein_distance, overlap, lcss]
 METRIC = metrics[MODEL]
-abstracts, titles = data.get_data()
+abstracts, titles = get_splitted_data(False)
 titles_peer, failed = textrank(abstracts[SET])
 titles_model = titles[SET]
-scores = rouge.eval_rouge(titles_peer, titles_model)
+scores = eval_rouge(titles_peer, titles_model)
 print(SET, MODEL)
 print(scores)
 print(failed)
