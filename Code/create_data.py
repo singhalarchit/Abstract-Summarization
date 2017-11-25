@@ -19,7 +19,7 @@ def main():
       root = tree.getroot()
       variant = root.findall('algorithm')[1][0]
       title = variant.findall('title')[0]
-      abstract = variant.findall('abstract')#[-1]
+      abstract = variant.findall('abstract')
       try:
         if filename in error_files:  
           abstract_writer.write(abstract[-1].text.encode('utf-8') + '\n')

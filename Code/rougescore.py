@@ -2,7 +2,7 @@ from __future__ import division
 import collections
 import numpy as np
 import six
-import string
+#import string
 
 """
 When alpha = 0, this score favors recall; when alpha = 1, it favors precision.
@@ -138,12 +138,14 @@ def rouge_vec(peer, models):
     fl = rouge_l(peer, models, 0.5)
     return np.array([p1, r1, f1, p2, r2, f2, pl, rl, fl])
 
+"""
 def tokenize(sentence):
     return sentence.lower().translate(None, string.punctuation).split()
+"""
 
 def eval_rouge(titles_peer, titles_model):
     scores = np.zeros(9)
     for peer, model in zip(titles_peer, titles_model):
-        peer, models = tokenize(peer), [tokenize(model)]
+        peer, models = peer.split(), [model.split()]
         scores += rouge_vec(peer, models)
     return scores/len(titles_peer)

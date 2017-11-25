@@ -5,10 +5,10 @@ Created on Fri Nov 17 15:38:29 2017
 @author: Archit
 """
 
-import load_data as data
 import nltk
 import numpy as np
-import rougescore as rouge
+from load_data import get_splitted_data
+from rougescore import eval_rouge
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -61,15 +61,15 @@ def informative_baseline(abstracts):
         k += 1
     return np.asarray(predictions), failed
 
-SET = 0
+SET = 1
 MODEL = 2
 
 baselines = [similarity_baseline, first_sent_baseline, informative_baseline]
-abstracts, titles = data.get_data()
+abstracts, titles = get_splitted_data(False)
 titles_peer, failed = baselines[MODEL](abstracts[SET])
 #titles_peer = abstracts[SET]
 titles_model = titles[SET]
-scores = rouge.eval_rouge(titles_peer, titles_model)
+scores = eval_rouge(titles_peer, titles_model)
 print(SET, MODEL)
 print(scores)
 print(failed)
