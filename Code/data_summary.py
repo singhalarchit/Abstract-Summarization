@@ -57,22 +57,3 @@ def load_vocab():
 
 #save_vocab()
 #word2idx, idx2word, word2idx2titleidx = load_vocab()
-
-"""
-titles
-sent_len
-min: 1, max: 1, mean: 1
-seq_len
-min: 1, max: 198, mean: 8.9280854709469342
-cap to 25 words
-12468 vocab size
-
-abstracts capped to 10 sentences
-sent_len
-min: 1, max: 10, mean = 5.6589729375598452
-seq_len
-min: 3, max: 5378, mean: 123.17769490500429
-38103 vocab size
-
-total 40648 unique vocab
-"""
