@@ -62,7 +62,7 @@ def load_full_data():
     return abstracts, titles
 
 def abstracts2idx(abstracts):
-    word2idx, _, _ = pickle.load(open(vocab_filename, "rb"))
+    word2idx, _, _, _ = pickle.load(open(vocab_filename, "rb"))
     mod_abstracts = []
     for abstract in abstracts:
         sentences = nltk.sent_tokenize(abstract)[:10]
@@ -75,7 +75,7 @@ def abstracts2idx(abstracts):
     return mod_abstracts
 
 def titles2idx(titles):
-    word2idx, _, _ = pickle.load(open(vocab_filename, "rb"))
+    word2idx, _, _, _ = pickle.load(open(vocab_filename, "rb"))
     mod_titles = []
     for title in titles:
         tokens = title.split()

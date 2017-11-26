@@ -47,13 +47,14 @@ def save_vocab():
     vocab = list(set(vocab_a + vocab_t))
     word2idx = {word: i for i, word in enumerate(vocab)}
     idx2word = {i: word for i, word in enumerate(vocab)}
-    word2idx2titleidx = {word2idx[word]: i for i, word in enumerate(vocab_t)}
-    pickle.dump([word2idx, idx2word, word2idx2titleidx], open(vocab_filename, "wb"), \
-                pickle.HIGHEST_PROTOCOL)
+    idx2titleidx = {word2idx[word]: i for i, word in enumerate(vocab_t)}
+    titleidx2idx = {i: word2idx[word] for i, word in enumerate(vocab_t)}
+    pickle.dump([word2idx, idx2word, idx2titleidx, titleidx2idx], 
+                open(vocab_filename, "wb"), pickle.HIGHEST_PROTOCOL)
 
 def load_vocab():
-    word2idx, idx2word, word2idx2titleidx = pickle.load(open(vocab_filename, "rb"))
-    return word2idx, idx2word, word2idx2titleidx
+    word2idx, idx2word, idx2titleidx, titleidx2idx = pickle.load(open(vocab_filename, "rb"))
+    return word2idx, idx2word, idx2titleidx, titleidx2idx
 
 #save_vocab()
-#word2idx, idx2word, word2idx2titleidx = load_vocab()
+#word2idx, idx2word, idx2titleidx, titleidx2idx = load_vocab()
