@@ -105,7 +105,6 @@ def split_data(abstracts, titles):
     return abstracts_split, titles_split
 
 def get_splitted_data(idx = True):
-    abstracts, titles = load_full_data()
     if idx:
         abstracts, titles = load_full_data_idx()
     else:
