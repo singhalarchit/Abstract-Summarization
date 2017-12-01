@@ -9,7 +9,7 @@ import pickle
 import nltk
 from load_data import load_full_data
 
-vocab_filename = "../Processed Data/vocab.pkl"
+vocab_filename = "../../Processed Data/vocab.pkl"
 vocab2_filename = "../Processed Data/vocab2.pkl"
 
 """

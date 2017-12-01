@@ -12,8 +12,8 @@ import datetime
 import torch
 import model
 import train
-import sys
-sys.path.append('../')
+#import sys
+#sys.path.append('../')
 from data_summary import load_vocab as load_vocab
 from load_data import get_splitted_data as get_splitted_data
 
@@ -24,7 +24,7 @@ parser.add_argument('-epochs', type=int, default=10000, help='number of epochs f
 parser.add_argument('-log-interval',  type=int, default=100,   help='how many steps to wait before logging training status [default: 1]')
 parser.add_argument('-plot-interval',  type=int, default=50,   help='how many steps to wait before plotting training status [default: 1]')
 #parser.add_argument('-test-interval', type=int, default=100, help='how many steps to wait before testing [default: 100]')
-parser.add_argument('-save-interval', type=int, default=100, help='how many steps to wait before saving [default:500]')
+parser.add_argument('-save-interval', type=int, default=1000, help='how many steps to wait before saving [default:500]')
 parser.add_argument('-save-dir', type=str, default='../Snapshots', help='where to save the snapshots')
 # data 
 #parser.add_argument('-shuffle', action='store_true', default=False, help='shuffle the data every epoch' )
@@ -71,6 +71,7 @@ for attr, value in sorted(args.__dict__.items()):
 abstracts, titles = get_splitted_data()
 
 
+"""
 # model
 if args.snapshot is None:
     encoderCNN = model.EncoderCNN(args)
@@ -89,17 +90,39 @@ if args.cuda:
     encoderCNN = encoderCNN.cuda()
     encoderRNN = encoderRNN.cuda()
     decoder = decoder.cuda()
+"""
 
+encoderCNN = model.EncoderCNN(args)
+encoderRNN = model.EncoderRNN(args)
+decoder = model.AttnDecoderRNN(args, encoderCNN)
+train.trainIters1(args, abstracts[0][:100], titles[0][:100], encoderCNN,
+                 encoderRNN, decoder)
 
-#train.trainIters(args, abstracts[0][:100], titles[0][:100], encoderCNN, encoderRNN, decoder)
+"""
+vanillaEncoderRNN = model.VanillaEncoderRNN(args)
+vanillaDecoderRNN = model.VanillaDecoderRNN(args, vanillaEncoderRNN)
+train.trainIters(args, abstracts[0][:100], titles[0][:100], vanillaEncoderRNN,
+                 vanillaDecoderRNN)
+"""
 
+"""
+filename = "../Snapshots/2017-12-01_02-00-03/"
+step = '1200'
+"""
 
-filename = "../../Snapshots/2017-11-26_19-24-12/"
-step = '10000'
+"""
+vanillaEncoderRNN = torch.load(filename + 'vanillaEncoderRNN_steps' + step + '.pt')
+vanillaDecoderRNN = torch.load(filename + 'vanillaDecoderRNN_steps' + step + '.pt')
+train.evaluateRandomly(args, abstracts[0][:100], titles[0][:100],
+                       vanillaEncoderRNN, vanillaDecoderRNN, n = 3)
+"""
+
+"""
 encoderCNN = torch.load(filename + 'encoderCNN_steps' + step + '.pt')
 encoderRNN = torch.load(filename + 'encoderRNN_steps' + step + '.pt')
 decoder = torch.load(filename + 'decoder_steps' + step + '.pt')
-train.evaluateRandomly(args, abstracts[0][:100], titles[0][:100], encoderCNN, 
+"""
+train.evaluateRandomly1(args, abstracts[0][:100], titles[0][:100], encoderCNN, 
                        encoderRNN, decoder, n = 3)
 
 

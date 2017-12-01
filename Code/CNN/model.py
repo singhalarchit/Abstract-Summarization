@@ -45,7 +45,7 @@ class  EncoderCNN(nn.Module):
         x = x.cuda() if self.args.cuda else x
         x = self.embed(x) # (N,W,D) (1,#words,D)
         if self.args.static:
-            x = Variable(x)
+            x = Variable(x.data)
         x = x.unsqueeze(1) # (N,Ci,W,D) (1,1,#words,D)
         x = self.feature_maps(x, self.convs1)
         #x = [F.relu(conv(x)).squeeze(3) for conv in self.convs1] # [(N,Co,W), ...]*len(Ks)
@@ -88,13 +88,36 @@ class EncoderRNN(nn.Module):
             return result
 
 
-class DecoderRNN(nn.Module):
-    def __init__(self, args, encoderCNN):
-        super(DecoderRNN, self).__init__()
+class VanillaEncoderRNN(nn.Module):
+    def __init__(self, args):
+        super(VanillaEncoderRNN, self).__init__()
+        self.args = args
+        self.embedding = nn.Embedding(args.embed_num, args.embed_dim)
+        self.hidden_size = args.hidden_dim
+        self.gru = nn.GRU(args.embed_dim, self.hidden_size)
+
+    def forward(self, input, hidden):
+        input = Variable(torch.LongTensor([[input]]))
+        output = self.embedding(input).view(1, 1, -1)
+        for i in range(self.args.num_layers):
+            output, hidden = self.gru(output, hidden)
+        return output, hidden
+
+    def initHidden(self):
+        result = Variable(torch.zeros(1, 1, self.hidden_size))
+        if self.args.cuda:
+            return result.cuda()
+        else:
+            return result
+
+
+class VanillaDecoderRNN(nn.Module):
+    def __init__(self, args, VanillaEncoderRNN):
+        super(VanillaDecoderRNN, self).__init__()
         self.args = args
         self.hidden_size = args.hidden_dim
         self.embedding = nn.Embedding(args.embed_num, args.embed_dim)
-        self.embedding.weight = encoderCNN.embed.weight
+        self.embedding.weight = VanillaEncoderRNN.embedding.weight
         self.gru = nn.GRU(self.hidden_size, self.hidden_size)
         self.out = nn.Linear(self.hidden_size, self.args.output_size)
         self.softmax = nn.LogSoftmax()

@@ -17,8 +17,8 @@ import time
 import torch
 import torch.nn as nn
 import warnings
-import sys
-sys.path.append('../')
+#import sys
+#sys.path.append('../')
 from data_summary import load_vocab as load_vocab
 from torch.autograd import Variable
 warnings.filterwarnings("ignore")
@@ -64,8 +64,6 @@ def variable(x):
 def train2(args, abstract, title, encoderCNN, encoderRNN, decoder, 
           encoderCNN_optimizer, encoderRNN_optimizer, decoder_optimizer, 
           criterion):
-    #print('abstract: ', abstract)
-    #print('title: ', title)
     title = [idx for idx in title if not idx in stopwordsidx]
     encoderRNN_hidden = encoderRNN.initHidden()
     encoderCNN_optimizer.zero_grad()
@@ -74,13 +72,14 @@ def train2(args, abstract, title, encoderCNN, encoderRNN, decoder,
     # Number of sentences
     num_sentences = len(abstract)
     # Number of words in gold title (capped to max_length)
-    target_length = args.max_length if len(title) > args.max_length else len(title)
-    title.append(EOS_token)
-    target_length += 1
-    #print('num_sentences: ', num_sentences, 'target_length: ', target_length)
+    target_length = args.max_length if len(title) > args.max_length \
+        else len(title)
+    #title.append(EOS_token)
+    #target_length += 1
     encoderRNN_outputs = Variable(
             torch.zeros(args.max_sentences, encoderRNN.hidden_size))
-    encoderRNN_outputs = encoderRNN_outputs.cuda() if args.cuda else encoderRNN_outputs
+    encoderRNN_outputs = encoderRNN_outputs.cuda() if args.cuda \
+        else encoderRNN_outputs
     loss = 0
     for ei in range(num_sentences):
         encoderRNN_input = encoderCNN.sent_enc(abstract[ei])
@@ -91,7 +90,8 @@ def train2(args, abstract, title, encoderCNN, encoderRNN, decoder,
     decoder_input = variable([SOS_token])
     decoder_input = decoder_input.cuda() if args.cuda else decoder_input
     decoder_hidden = encoderRNN_hidden
-    use_teacher_forcing = True if random.random() < args.teacher_forcing_ratio else False    
+    use_teacher_forcing = True if random.random() < args.teacher_forcing_ratio \
+        else False    
     #print('use_teacher_forcing: ', use_teacher_forcing)
     if use_teacher_forcing:
         # Teacher forcing: Feed the target as the next input
@@ -112,7 +112,7 @@ def train2(args, abstract, title, encoderCNN, encoderRNN, decoder,
             decoder_input = decoder_input.cuda() if args.cuda else decoder_input
             loss += criterion(decoder_output, variable(idx2titleidx[title[di]]))
             if ni == EOS_token:
-                print("EOS encounted")
+                print("EOS encounted at word", di+1)
                 break
     loss.backward()
     encoderCNN_optimizer.step()
@@ -121,7 +121,7 @@ def train2(args, abstract, title, encoderCNN, encoderRNN, decoder,
     return loss.data[0] / target_length
 
 
-def train(args, abstract, title, encoderCNN, encoderRNN, decoder, 
+def train1(args, abstract, title, encoderCNN, encoderRNN, decoder, 
           encoderCNN_optimizer, encoderRNN_optimizer, decoder_optimizer, 
           criterion):
     encoderRNN_hidden = encoderRNN.initHidden()
@@ -133,13 +133,15 @@ def train(args, abstract, title, encoderCNN, encoderRNN, decoder,
     abstract_idxs = abstract_idxs.cuda() if args.cuda else abstract_idxs
     word_embeddings = encoderCNN.embed(abstract_idxs)
     num_sentences = len(abstract)
-    target_length = args.max_length if len(title) > args.max_length else len(title)
-    title.append(EOS_token)
-    target_length += 1
+    target_length = args.max_length if len(title) > args.max_length \
+        else len(title)
+    #title.append(EOS_token)
+    #target_length += 1
     abstract_idx.extend(title)
     encoderRNN_outputs = Variable(
             torch.zeros(args.max_sentences, encoderRNN.hidden_size))
-    encoderRNN_outputs = encoderRNN_outputs.cuda() if args.cuda else encoderRNN_outputs
+    encoderRNN_outputs = encoderRNN_outputs.cuda() if args.cuda \
+        else encoderRNN_outputs
     loss = 0
     for ei in range(num_sentences):
         encoderRNN_input = encoderCNN.sent_enc(abstract[ei])
@@ -150,17 +152,16 @@ def train(args, abstract, title, encoderCNN, encoderRNN, decoder,
     decoder_input = variable([SOS_token])
     decoder_input = decoder_input.cuda() if args.cuda else decoder_input
     decoder_hidden = encoderRNN_hidden
-    use_teacher_forcing = True if random.random() < args.teacher_forcing_ratio else False    
+    use_teacher_forcing = True if random.random() < args.teacher_forcing_ratio \
+        else False    
     if use_teacher_forcing:
         # Teacher forcing: Feed the target as the next input
         for di in range(target_length):
             _, decoder_hidden, _, p = decoder(decoder_input, decoder_hidden, 
                                            encoderRNN_outputs, word_embeddings)
-            #dummy_p = Variable(torch.zeros((1, target_length)))
-            #output_prob = torch.cat((p, dummy_p), 1)
             true_label = abstract_idx.index(title[di])
-            loss += torch.max(-p) if true_label > (p.size(1) - 1) else -p[0][true_label]            
-            #loss += criterion(p, variable(true_label))
+            loss += torch.max(-p) if true_label > (p.size(1) - 1) \
+                else -p[0][true_label]            
             decoder_input = variable([title[di]])  # Teacher forcing
             decoder_input = decoder_input.cuda() if args.cuda else decoder_input
     else:
@@ -168,15 +169,13 @@ def train(args, abstract, title, encoderCNN, encoderRNN, decoder,
         for di in range(target_length):
             _, decoder_hidden, _, p = decoder(decoder_input, decoder_hidden, 
                                            encoderRNN_outputs, word_embeddings)
-            #dummy_p = Variable(torch.zeros((1, target_length)))
-            #output_prob = torch.cat((p, dummy_p), 1)
             true_label = abstract_idx.index(title[di])
-            loss += torch.max(-p) if true_label > (p.size(1) - 1) else -p[0][true_label]
+            loss += torch.max(-p) if true_label > (p.size(1) - 1) \
+                else -p[0][true_label]
             topv, topi = p.data.topk(1)
             ni = abstract_idx[topi[0][0]]
             decoder_input = variable([ni])
             decoder_input = decoder_input.cuda() if args.cuda else decoder_input
-            #loss += criterion(p, variable(true_label))
             if ni == EOS_token:
                 print("EOS encounted at ", di)
                 break
@@ -187,7 +186,55 @@ def train(args, abstract, title, encoderCNN, encoderRNN, decoder,
     return loss.data[0] / target_length
 
 
-def trainIters(args, abstracts, titles, encoderCNN, encoderRNN, decoder):
+def train(args, abstract, title, vanillaEncoderRNN, vanillaDecoderRNN,
+          vanillaEncoderRNN_optimizer, vanillaDecoderRNN_optimizer, criterion):
+    vanillaEncoderRNN_hidden = vanillaEncoderRNN.initHidden()
+    vanillaEncoderRNN_optimizer.zero_grad()
+    vanillaDecoderRNN_optimizer.zero_grad()
+    abstract_idx = [idx for sentence in abstract for idx in sentence]
+    num_words_abstract = len(abstract_idx)
+    target_length = args.max_length if len(title) > args.max_length else len(title)
+    #title.append(EOS_token)
+    #target_length += 1
+    loss = 0
+    for ei in range(num_words_abstract):
+        vanillaEncoderRNN_input = abstract_idx[ei]
+        vanillaEncoderRNN_output, vanillaEncoderRNN_hidden = vanillaEncoderRNN(
+                vanillaEncoderRNN_input, vanillaEncoderRNN_hidden)
+    vanillaDecoderRNN_input = variable([SOS_token])
+    vanillaDecoderRNN_input = vanillaDecoderRNN_input.cuda() if args.cuda else vanillaDecoderRNN_input
+    vanillaDecoderRNN_hidden = vanillaEncoderRNN_hidden
+    use_teacher_forcing = True if random.random() < args.teacher_forcing_ratio else False    
+    if use_teacher_forcing:
+        # Teacher forcing: Feed the target as the next input
+        for di in range(target_length):
+            vanillaDecoderRNN_output, vanillaDecoderRNN_hidden = vanillaDecoderRNN(
+                    vanillaDecoderRNN_input, vanillaDecoderRNN_hidden)
+            loss += criterion(vanillaDecoderRNN_output,
+                              variable(idx2titleidx[title[di]]))
+            vanillaDecoderRNN_input = variable([title[di]])  # Teacher forcing
+            vanillaDecoderRNN_input = vanillaDecoderRNN_input.cuda() if args.cuda else vanillaDecoderRNN_input
+    else:
+        # Without teacher forcing: use its own predictions as the next input
+        for di in range(target_length):
+            vanillaDecoderRNN_output, vanillaDecoderRNN_hidden = vanillaDecoderRNN(
+                    vanillaDecoderRNN_input, vanillaDecoderRNN_hidden)
+            topv, topi = vanillaDecoderRNN_output.data.topk(1)
+            ni = titleidx2idx[topi[0][0]]
+            vanillaDecoderRNN_input = variable([ni])
+            vanillaDecoderRNN_input = vanillaDecoderRNN_input.cuda() if args.cuda else vanillaDecoderRNN_input
+            loss += criterion(vanillaDecoderRNN_output,
+                              variable(idx2titleidx[title[di]]))
+            if ni == EOS_token:
+                print("EOS encounted at", di)
+                break
+    loss.backward()
+    vanillaEncoderRNN_optimizer.step()
+    vanillaDecoderRNN_optimizer.step()
+    return loss.data[0] / target_length
+
+
+def trainIters1(args, abstracts, titles, encoderCNN, encoderRNN, decoder):
     start = time.time()
     plot_losses = []
     print_loss_total = 0    # Reset every args.log_interval
@@ -197,18 +244,19 @@ def trainIters(args, abstracts, titles, encoderCNN, encoderRNN, decoder):
     decoder_optimizer = torch.optim.SGD(decoder.parameters(), lr = args.lr)
     criterion = nn.NLLLoss()
     for iter in range(1, args.epochs + 1):
-        abstract, title = abstracts[iter % len(titles) - 1], titles[iter % len(titles) - 1]
-        loss = train(args, abstract, title, encoderCNN, encoderRNN, decoder, 
+        abstract = abstracts[iter % len(titles) - 1]
+        title = titles[iter % len(titles) - 1]
+        loss = train1(args, abstract, title, encoderCNN, encoderRNN, decoder, 
                      encoderCNN_optimizer, encoderRNN_optimizer,
                      decoder_optimizer, criterion)
         print_loss_total += loss
         plot_loss_total += loss
         if iter % args.log_interval == 0:
-            log = (torch.sum((encoderCNN.embed.weight == decoder.embedding.weight).int())/40648).data[0]
             print_loss_avg = print_loss_total / args.log_interval
             print_loss_total = 0
-            print('%s (%d %d%%) %.4f %d' % (timeSince(start, float(iter) / args.epochs),
-                       iter, float(iter) / args.epochs * 100, print_loss_avg, log))
+            print('%s (%d %d%%) %.4f' % 
+                  (timeSince(start, float(iter) / args.epochs), iter,
+                   float(iter) / args.epochs * 100, print_loss_avg))
         if iter % args.plot_interval == 0:
             plot_loss_avg = plot_loss_total / args.plot_interval
             plot_losses.append(plot_loss_avg)
@@ -224,12 +272,57 @@ def trainIters(args, abstracts, titles, encoderCNN, encoderRNN, decoder):
     showPlot(plot_losses)
 
 
+def trainIters(args, abstracts, titles, vanillaEncoderRNN, vanillaDecoderRNN):
+    start = time.time()
+    plot_losses = []
+    print_loss_total = 0    # Reset every args.log_interval
+    plot_loss_total = 0     # Reset every args.plot_interval
+    vanillaEncoderRNN_optimizer = torch.optim.SGD(
+            vanillaEncoderRNN.parameters(), lr = args.lr)
+    vanillaDecoderRNN_optimizer = torch.optim.SGD(
+            vanillaDecoderRNN.parameters(), lr = args.lr)
+    criterion = nn.NLLLoss()
+    for iter in range(1, args.epochs + 1):
+        abstract, title = abstracts[iter % len(titles) - 1], \
+            titles[iter % len(titles) - 1]
+        loss = train(args, abstract, title, vanillaEncoderRNN,
+                     vanillaDecoderRNN, vanillaEncoderRNN_optimizer,
+                     vanillaDecoderRNN_optimizer, criterion)
+        print_loss_total += loss
+        plot_loss_total += loss
+        if iter % args.log_interval == 0:
+            """
+            log = (torch.sum((
+                    vanillaEncoderRNN.embedding.weight == \
+                    vanillaDecoderRNN.embedding.weight).int())/40648).data[0]
+            """
+            print_loss_avg = print_loss_total / args.log_interval
+            print_loss_total = 0
+            print('%s (%d %d%%) %.4f' % 
+                  (timeSince(start, float(iter) / args.epochs), iter, 
+                   float(iter) / args.epochs * 100, print_loss_avg))
+        if iter % args.plot_interval == 0:
+            plot_loss_avg = plot_loss_total / args.plot_interval
+            plot_losses.append(plot_loss_avg)
+            plot_loss_total = 0
+        if iter % args.save_interval == 0:
+            if not os.path.isdir(args.save_dir): os.makedirs(args.save_dir)
+            models = [vanillaEncoderRNN, vanillaDecoderRNN]
+            prefixes = ['vanillaEncoderRNN', 'vanillaDecoderRNN']
+            for model, prefix in zip(models, prefixes):
+                save_prefix = os.path.join(args.save_dir, prefix)
+                save_path = '{}_steps{}.pt'.format(save_prefix, iter)
+                torch.save(model, save_path)
+    showPlot(plot_losses)
+
+
 def evaluate2(args, abstract, encoderCNN, encoderRNN, decoder):
     num_sentences = len(abstract)
     encoderRNN_hidden = encoderRNN.initHidden()
     encoderRNN_outputs = Variable(
             torch.zeros(args.max_sentences, encoderRNN.hidden_size))
-    encoderRNN_outputs = encoderRNN_outputs.cuda() if args.cuda else encoderRNN_outputs
+    encoderRNN_outputs = encoderRNN_outputs.cuda() if args.cuda \
+        else encoderRNN_outputs
     for ei in range(num_sentences):
         encoderRNN_input = encoderCNN.sent_enc(abstract[ei])
         encoderRNN_input = encoderRNN_input * args.dropout
@@ -239,7 +332,6 @@ def evaluate2(args, abstract, encoderCNN, encoderRNN, decoder):
     decoder_input = variable([SOS_token])  # SOS
     decoder_input = decoder_input.cuda() if args.cuda else decoder_input
     decoder_hidden = encoderRNN_hidden
-    print(decoder_hidden.data[0][0][:10].numpy())
     decoded_words = []    
     decoder_attentions = torch.zeros(args.max_length, args.max_sentences)
     for di in range(args.max_length):
@@ -258,7 +350,7 @@ def evaluate2(args, abstract, encoderCNN, encoderRNN, decoder):
     return decoded_words, decoder_attentions[:di + 1]
 
 
-def evaluate(args, abstract, encoderCNN, encoderRNN, decoder):
+def evaluate1(args, abstract, encoderCNN, encoderRNN, decoder):
     abstract_idx = [idx for sentence in abstract for idx in sentence]
     abstract_idxs = Variable(torch.LongTensor(abstract_idx))
     abstract_idxs = abstract_idxs.cuda() if args.cuda else abstract_idxs
@@ -267,7 +359,8 @@ def evaluate(args, abstract, encoderCNN, encoderRNN, decoder):
     encoderRNN_hidden = encoderRNN.initHidden()
     encoderRNN_outputs = Variable(
             torch.zeros(args.max_sentences, encoderRNN.hidden_size))
-    encoderRNN_outputs = encoderRNN_outputs.cuda() if args.cuda else encoderRNN_outputs
+    encoderRNN_outputs = encoderRNN_outputs.cuda() if args.cuda \
+        else encoderRNN_outputs
     for ei in range(num_sentences):
         encoderRNN_input = encoderCNN.sent_enc(abstract[ei])
         encoderRNN_input = encoderRNN_input * args.dropout
@@ -296,7 +389,37 @@ def evaluate(args, abstract, encoderCNN, encoderRNN, decoder):
     return decoded_words, decoder_attentions[:di + 1]
 
 
-def evaluateRandomly(args, abstracts, titles, encoderCNN, encoderRNN, decoder, 
+def evaluate(args, abstract, vanillaEncoderRNN, vanillaDecoderRNN): 
+    vanillaEncoderRNN_hidden = vanillaEncoderRNN.initHidden()
+    abstract_idx = [idx for sentence in abstract for idx in sentence]
+    num_words_abstract = len(abstract_idx)    
+    for ei in range(num_words_abstract):
+        vanillaEncoderRNN_input = abstract_idx[ei]
+        vanillaEncoderRNN_output, vanillaEncoderRNN_hidden = vanillaEncoderRNN(
+                vanillaEncoderRNN_input, vanillaEncoderRNN_hidden)
+    vanillaDecoderRNN_input = variable([SOS_token])
+    vanillaDecoderRNN_input = vanillaDecoderRNN_input.cuda() if args.cuda\
+        else vanillaDecoderRNN_input
+    vanillaDecoderRNN_hidden = vanillaEncoderRNN_hidden    
+    #print(vanillaDecoderRNN_hidden.data[0][0][:10].numpy())
+    decoded_words = []    
+    for di in range(args.max_length):
+        vanillaDecoderRNN_output, vanillaDecoderRNN_hidden = vanillaDecoderRNN(
+                vanillaDecoderRNN_input, vanillaDecoderRNN_hidden)
+        topv, topi = vanillaDecoderRNN_output.data.topk(1)
+        ni = titleidx2idx[topi[0][0]]
+        if ni == EOS_token:
+            decoded_words.append('<EOS>')
+            break
+        else:
+            decoded_words.append(idx2word[ni])
+        vanillaDecoderRNN_input = variable([ni])
+        vanillaDecoderRNN_input = vanillaDecoderRNN_input.cuda() if args.cuda\
+            else vanillaDecoderRNN_input    
+    return decoded_words
+
+
+def evaluateRandomly1(args, abstracts, titles, encoderCNN, encoderRNN, decoder, 
                      n = 10):
     total = len(titles)
     for i in range(n):
@@ -308,8 +431,27 @@ def evaluateRandomly(args, abstracts, titles, encoderCNN, encoderRNN, decoder,
         abstractt = ' '.join(abstractt[:25])
         print('>', abstractt)
         print('=', title)
-        output_words, attentions = evaluate(args, abstract, encoderCNN,
+        output_words, attentions = evaluate1(args, abstract, encoderCNN,
                                             encoderRNN, decoder)
+        output_sentence = ' '.join(output_words)
+        print('<', output_sentence)
+        print('')
+
+
+def evaluateRandomly(args, abstracts, titles, vanillaEncoderRNN,
+                     vanillaDecoderRNN, n = 10):
+    total = len(titles)
+    for i in range(n):
+        ind = random.randint(0, total - 1)
+        abstract, title = abstracts[ind], titles[ind]
+        title = [idx2word[idx] for idx in title]
+        title = ' '.join(title[:25])
+        abstractt = [idx2word[idx] for sentence in abstract for idx in sentence]
+        abstractt = ' '.join(abstractt[:25])
+        print('>', abstractt)
+        print('=', title)
+        output_words = evaluate(args, abstract, vanillaEncoderRNN,
+                                vanillaDecoderRNN)
         output_sentence = ' '.join(output_words)
         print('<', output_sentence)
         print('')

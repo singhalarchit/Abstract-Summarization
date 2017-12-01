@@ -13,9 +13,9 @@ import unicodedata
 from io import open
 
 full_data_filename = "../Processed Data/fulldata.pkl"
-full_data_idx_filename = "../Processed Data/fulldataidx.pkl"
+full_data_idx_filename = "../../Processed Data/fulldataidx.pkl"
 full_data2_idx_filename = "../Processed Data/fulldataidx2.pkl"
-vocab_filename = "../Processed Data/vocab2.pkl"
+vocab_filename = "../../Processed Data/vocab2.pkl"
 
 """
 def read_dataset2(filename):
