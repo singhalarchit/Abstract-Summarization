@@ -13,16 +13,15 @@ from torch.autograd import Variable
 torch.manual_seed(1)
 
 class  EncoderCNN(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args, embedding):
         super(EncoderCNN, self).__init__()
         self.args = args
-        V = args.embed_num
         D = args.embed_dim                  # embed_dim for a word
         self.Ci = 1
         Co = args.kernel_num
         Ks = args.kernel_sizes
         #D2 = Co * len(Ks)                  # embed_dim for a sentence
-        self.embed = nn.Embedding(V, D)
+        self.embed = embedding
         self.convs1 = nn.ModuleList([nn.Conv2d(self.Ci, Co, (K, D)) for K in Ks])
         self.dropout = nn.Dropout(self.args.dropout)
         #self.convs2 = nn.ModuleList([nn.Conv2d(self.Ci, Co, (K, D2)) for K in Ks]) #padding=(K-1, 0)
@@ -89,10 +88,10 @@ class EncoderRNN(nn.Module):
 
 
 class VanillaEncoderRNN(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args, embedding):
         super(VanillaEncoderRNN, self).__init__()
         self.args = args
-        self.embedding = nn.Embedding(args.embed_num, args.embed_dim)
+        self.embedding = embedding
         self.hidden_size = args.hidden_dim
         self.gru = nn.GRU(args.embed_dim, self.hidden_size)
 
@@ -112,12 +111,11 @@ class VanillaEncoderRNN(nn.Module):
 
 
 class VanillaDecoderRNN(nn.Module):
-    def __init__(self, args, VanillaEncoderRNN):
+    def __init__(self, args, embedding):
         super(VanillaDecoderRNN, self).__init__()
         self.args = args
         self.hidden_size = args.hidden_dim
-        self.embedding = nn.Embedding(args.embed_num, args.embed_dim)
-        self.embedding.weight = VanillaEncoderRNN.embedding.weight
+        self.embedding = embedding
         self.gru = nn.GRU(self.hidden_size, self.hidden_size)
         self.out = nn.Linear(self.hidden_size, self.args.output_size)
         self.softmax = nn.LogSoftmax()
@@ -139,12 +137,11 @@ class VanillaDecoderRNN(nn.Module):
 
 
 class AttnDecoderRNN2(nn.Module):
-    def __init__(self, args, encoderCNN):
+    def __init__(self, args, embedding):
         super(AttnDecoderRNN2, self).__init__()
         self.args = args
         self.hidden_size = args.hidden_dim
-        self.embedding = nn.Embedding(args.embed_num, args.embed_dim)
-        self.embedding.weight = encoderCNN.embed.weight
+        self.embedding = embedding
         self.dropout = nn.Dropout(self.args.dropout)
         self.attn = nn.Linear(self.hidden_size * 2, self.args.max_sentences)
         self.attn_combine = nn.Linear(self.hidden_size * 2, self.hidden_size)
@@ -152,11 +149,8 @@ class AttnDecoderRNN2(nn.Module):
         self.out = nn.Linear(self.hidden_size, self.args.output_size)
 
     def forward(self, input, hidden, encoder_outputs):
-        #print('size', input[0][0])
         embedded = self.embedding(input).view(1, 1, -1)
-        #print('embedded', embedded.size())
         embedded = self.dropout(embedded)
-        #print('embedded', embedded.size())
         attn_weights = F.softmax(
             self.attn(torch.cat((embedded[0], hidden[0]), 1)))  # 1 x max_sentences
         attn_applied = torch.bmm(attn_weights.unsqueeze(0),
@@ -178,12 +172,11 @@ class AttnDecoderRNN2(nn.Module):
 
 
 class AttnDecoderRNN(nn.Module):
-    def __init__(self, args, encoderCNN):
+    def __init__(self, args, embedding):
         super(AttnDecoderRNN, self).__init__()
         self.args = args
         self.hidden_size = args.hidden_dim
-        self.embedding = nn.Embedding(args.embed_num, args.embed_dim)
-        self.embedding.weight = encoderCNN.embed.weight
+        self.embedding = embedding
         self.dropout = nn.Dropout(self.args.dropout)
         self.gru = nn.GRU(args.embed_dim, self.hidden_size)
         p, q = 100, 200
@@ -207,8 +200,6 @@ class AttnDecoderRNN(nn.Module):
         u = F.tanh(torch.mm(encoder_output, self.We2) + 
                    torch.mm(word_embeddings, self.Wr2))
         scores = torch.mm(self.v, torch.t(u))
-        #dummy_scores = Variable(torch.zeros((1, target_length)))
-        #cat_scores = torch.cat((scores, dummy_scores), 1)
         p = F.log_softmax(scores)        
         return output, hidden, b, p
     

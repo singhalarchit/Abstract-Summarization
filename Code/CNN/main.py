@@ -12,20 +12,24 @@ import datetime
 import torch
 import model
 import train
+import torch.nn as nn
 #import sys
 #sys.path.append('../')
 from data_summary import load_vocab as load_vocab
 from load_data import get_splitted_data as get_splitted_data
 
+torch.manual_seed(1)
+
 parser = argparse.ArgumentParser(description='Abstract Summarizer')
 # learning
 parser.add_argument('-lr', type=float, default=0.001, help='initial learning rate [default: 0.001]')
-parser.add_argument('-epochs', type=int, default=10000, help='number of epochs for train [default: 256]')
+parser.add_argument('-epochs', type=int, default=1000, help='number of epochs for train [default: 256]')
 parser.add_argument('-log-interval',  type=int, default=100,   help='how many steps to wait before logging training status [default: 1]')
 parser.add_argument('-plot-interval',  type=int, default=50,   help='how many steps to wait before plotting training status [default: 1]')
 #parser.add_argument('-test-interval', type=int, default=100, help='how many steps to wait before testing [default: 100]')
 parser.add_argument('-save-interval', type=int, default=1000, help='how many steps to wait before saving [default:500]')
 parser.add_argument('-save-dir', type=str, default='../Snapshots', help='where to save the snapshots')
+parser.add_argument('-plot-dir', type=str, default='../Plots', help='where to save the plots')
 # data 
 #parser.add_argument('-shuffle', action='store_true', default=False, help='shuffle the data every epoch' )
 # model
@@ -55,6 +59,7 @@ word2idx, _, idx2titleidx, _ = load_vocab()
 args.cuda = (not args.no_cuda) and torch.cuda.is_available(); del args.no_cuda
 args.kernel_sizes = [int(k) for k in args.kernel_sizes.split(',')]
 args.save_dir = os.path.join(args.save_dir, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+args.plot_dir = os.path.join(args.plot_dir, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 args.embed_num = len(word2idx)
 args.output_size = len(idx2titleidx)
 args.teacher_forcing_ratio = 0.5
@@ -92,22 +97,26 @@ if args.cuda:
     decoder = decoder.cuda()
 """
 
-encoderCNN = model.EncoderCNN(args)
-encoderRNN = model.EncoderRNN(args)
-decoder = model.AttnDecoderRNN(args, encoderCNN)
-train.trainIters1(args, abstracts[0][:100], titles[0][:100], encoderCNN,
-                 encoderRNN, decoder)
+embedding = nn.Embedding(args.embed_num, args.embed_dim)
 
 """
-vanillaEncoderRNN = model.VanillaEncoderRNN(args)
-vanillaDecoderRNN = model.VanillaDecoderRNN(args, vanillaEncoderRNN)
+encoderCNN = model.EncoderCNN(args, embedding)
+encoderRNN = model.EncoderRNN(args)
+decoder = model.AttnDecoderRNN(args, embedding)
+train.trainIters1(args, abstracts[0][:100], titles[0][:100], encoderCNN,
+                 encoderRNN, decoder)
+"""
+
+"""
+vanillaEncoderRNN = model.VanillaEncoderRNN(args, embedding)
+vanillaDecoderRNN = model.VanillaDecoderRNN(args, embedding)
 train.trainIters(args, abstracts[0][:100], titles[0][:100], vanillaEncoderRNN,
                  vanillaDecoderRNN)
 """
 
 """
-filename = "../Snapshots/2017-12-01_02-00-03/"
-step = '1200'
+filename = "../Snapshots/2017-12-01_03-28-04/"
+step = '10000'
 """
 
 """
@@ -121,9 +130,11 @@ train.evaluateRandomly(args, abstracts[0][:100], titles[0][:100],
 encoderCNN = torch.load(filename + 'encoderCNN_steps' + step + '.pt')
 encoderRNN = torch.load(filename + 'encoderRNN_steps' + step + '.pt')
 decoder = torch.load(filename + 'decoder_steps' + step + '.pt')
-"""
+
+
 train.evaluateRandomly1(args, abstracts[0][:100], titles[0][:100], encoderCNN, 
                        encoderRNN, decoder, n = 3)
+"""
 
 
 '''

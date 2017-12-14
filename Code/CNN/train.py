@@ -5,7 +5,6 @@ Created on Sat Nov 25 23:07:29 2017
 @author: Archit
 """
 
-import datetime
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
@@ -42,10 +41,9 @@ def timeSince(since, percent):
     rs = es - s
     return '%s (- %s)' % (asMinutes(s), asMinutes(rs))
 
-def showPlot(points):
+def showPlot(points, save_path):
     plt.figure()
     fig, ax = plt.subplots()
-    # this locator puts ticks at regular intervals
     loc = ticker.MultipleLocator(base=0.2)
     ax.yaxis.set_major_locator(loc)
     plt.plot(points)
@@ -53,8 +51,7 @@ def showPlot(points):
     plt.ylabel('NLL Loss', fontsize=12)
     plt.title('NLL Loss vs Number of iterations')
     plt.grid()
-    date = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    plt.savefig('../Plots/training_curve_' + date, bbox_inches='tight')
+    plt.savefig(save_path, bbox_inches='tight')
     plt.close()
     
 def variable(x):
@@ -64,7 +61,7 @@ def variable(x):
 def train2(args, abstract, title, encoderCNN, encoderRNN, decoder, 
           encoderCNN_optimizer, encoderRNN_optimizer, decoder_optimizer, 
           criterion):
-    title = [idx for idx in title if not idx in stopwordsidx]
+    #title = [idx for idx in title if not idx in stopwordsidx]
     encoderRNN_hidden = encoderRNN.initHidden()
     encoderCNN_optimizer.zero_grad()
     encoderRNN_optimizer.zero_grad()
@@ -239,9 +236,9 @@ def trainIters1(args, abstracts, titles, encoderCNN, encoderRNN, decoder):
     plot_losses = []
     print_loss_total = 0    # Reset every args.log_interval
     plot_loss_total = 0     # Reset every args.plot_interval
-    encoderCNN_optimizer = torch.optim.SGD(encoderCNN.parameters(), lr = args.lr)
-    encoderRNN_optimizer = torch.optim.SGD(encoderRNN.parameters(), lr = args.lr)
-    decoder_optimizer = torch.optim.SGD(decoder.parameters(), lr = args.lr)
+    encoderCNN_optimizer = torch.optim.Adam(encoderCNN.parameters(), lr = args.lr)
+    encoderRNN_optimizer = torch.optim.Adam(encoderRNN.parameters(), lr = args.lr)
+    decoder_optimizer = torch.optim.Adam(decoder.parameters(), lr = args.lr)
     criterion = nn.NLLLoss()
     for iter in range(1, args.epochs + 1):
         abstract = abstracts[iter % len(titles) - 1]
@@ -269,7 +266,10 @@ def trainIters1(args, abstracts, titles, encoderCNN, encoderRNN, decoder):
                 save_prefix = os.path.join(args.save_dir, prefix)
                 save_path = '{}_steps{}.pt'.format(save_prefix, iter)
                 torch.save(model, save_path)
-    showPlot(plot_losses)
+    if not os.path.isdir(args.plot_dir): os.makedirs(args.plot_dir)
+    prefix = 'learning_curve.png'
+    save_path = os.path.join(args.plot_dir, prefix)
+    showPlot(plot_losses, save_path)
 
 
 def trainIters(args, abstracts, titles, vanillaEncoderRNN, vanillaDecoderRNN):
@@ -277,9 +277,9 @@ def trainIters(args, abstracts, titles, vanillaEncoderRNN, vanillaDecoderRNN):
     plot_losses = []
     print_loss_total = 0    # Reset every args.log_interval
     plot_loss_total = 0     # Reset every args.plot_interval
-    vanillaEncoderRNN_optimizer = torch.optim.SGD(
+    vanillaEncoderRNN_optimizer = torch.optim.Adam(
             vanillaEncoderRNN.parameters(), lr = args.lr)
-    vanillaDecoderRNN_optimizer = torch.optim.SGD(
+    vanillaDecoderRNN_optimizer = torch.optim.Adam(
             vanillaDecoderRNN.parameters(), lr = args.lr)
     criterion = nn.NLLLoss()
     for iter in range(1, args.epochs + 1):
@@ -295,6 +295,7 @@ def trainIters(args, abstracts, titles, vanillaEncoderRNN, vanillaDecoderRNN):
             log = (torch.sum((
                     vanillaEncoderRNN.embedding.weight == \
                     vanillaDecoderRNN.embedding.weight).int())/40648).data[0]
+            print('log', log)
             """
             print_loss_avg = print_loss_total / args.log_interval
             print_loss_total = 0
@@ -313,7 +314,10 @@ def trainIters(args, abstracts, titles, vanillaEncoderRNN, vanillaDecoderRNN):
                 save_prefix = os.path.join(args.save_dir, prefix)
                 save_path = '{}_steps{}.pt'.format(save_prefix, iter)
                 torch.save(model, save_path)
-    showPlot(plot_losses)
+    if not os.path.isdir(args.plot_dir): os.makedirs(args.plot_dir)
+    prefix = 'learning_curve.png'
+    save_path = os.path.join(args.plot_dir, prefix)
+    showPlot(plot_losses, save_path)
 
 
 def evaluate2(args, abstract, encoderCNN, encoderRNN, decoder):

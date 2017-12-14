@@ -1,0 +1,55 @@
+Vanilla RNN encoder decoder (Adam)
+
+RESULTS ON VALIDATION SET
+
+('>', '<ABSTRACT>')
+('=', 'TRUE TITLE')
+('<', 'PREDICTED TITLE')
+
+('>', 'a full understanding of text is out of reach of current human language technology . however a shallow natural language processing nlp approach can be')
+('=', 'indexing student essays paragraphs using lsa over an integrated ontological space')
+('<', 'exploiting knowledge based just in time retrieval system for identifying parts for life dependency parsing system is affected by domain shifts dependency parsing system is')
+
+('>', 'we propose the use of lexicalized tree adjoining grammar ltag as a source of features that are useful for reranking the output of a statistical')
+('=', 'ltag based features in parse')
+('<', 'using treebanking discriminants as parse disambiguation features in hindi dependency parsing system for wmt dependency parsing system for wmt dependency parsing system for wmt dependency')
+
+('>', 'many approaches to opinion and sentiment analysis rely on lexicons of words that may be used to express subjectivity . these are compiled as lists')
+('=', 'subjectivity word sense abstract of invited talk')
+('<', 'a computational model of the semantics of tense and aspect a of speech acts in the acquisition of speech acts in the acquisition of speech')
+
+RESULTS ON TRAINING SET
+
+('>', '<ABSTRACT>')
+('=', 'TRUE TITLE')
+('<', 'PREDICTED TITLE')
+
+('>', 'this paper presents a method for deriving metonymic coercions from the knowledge available in wordnet . two different classes of metonymies are inferred by using')
+('=', 'deriving metonymic coercions from wordnet')
+('<', 'deriving metonymic coercions from wordnet in natural language data embedding sub spaces through dimensionality reduction to evaluate texts of lengths an ir approach to evaluate')
+
+('>', 'the automatic content linking device is a just in time document retrieval system which monitors an ongoing conversation or a monologue and enriches it with')
+('=', 'a speech based just in time retrieval system using semantic search')
+('<', 'a speech based just in time retrieval system using semantic search using semantic search using semantic search using semantic search using semantic search using semantic')
+
+('>', 'this paper describes a simple evaluation metric for mt which attempts to overcome the well known deficits of the standard bleu metric from a slightly')
+('=', 'a simple automatic mt evaluation metric')
+('<', 'a simple automatic mt evaluation metric metric metric metric metric rules dependency parsing dependency parsing dependency parsing dependency parsing dependency parsing dependency parsing dependency parsing')
+
+RESULTS ON TESTING SET
+
+('>', '<ABSTRACT>')
+('=', 'TRUE TITLE')
+('<', 'PREDICTED TITLE')
+
+('>', 'many machine learning methods have recently been applied to natural language processing tasks . among them the winnow algorithm has been argued to be particularly')
+('=', 'text chunking using regularized winnow')
+('<', 'a of of speech with discoursally and semantically motivated intonation system for wmt using subtree features in the effects and consequences of speech acts for')
+
+('>', 'sophisticated grammar formalisms such as lfg allow concisely capturing complex linguistic phenomena . the powerful operators provided by such formalisms can however introduce spurious ambiguity')
+('=', 'experiments with corpus based lfg specialization')
+('<', 'statistical machine translation with a factorized grammar and paraphrase rules dependency parsing system for wmt and paraphrase rules dependency parsing system for wmt and paraphrase')
+
+('>', 'comma placements in chinese text are relatively arbitrary although there are some syntactic guidelines for them . in this research we attempt to improve the')
+('=', 'modeling comma placement in chinese text for better readability linguistic features and gaze information')
+('<', 'a baseline of data russian english machine translation system for wmt parsing system is affected by domain shifts dependency parsing system is affected by domain')
